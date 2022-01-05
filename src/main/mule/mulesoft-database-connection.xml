@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="80bf32df-00a0-421d-8026-b7cf93a51f84" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="448045d2-5122-4167-a4b3-cdb31065d1f9" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="284568" database="mule" />
+	</db:config>
+	<flow name="mulesoft-database-connectionFlow" doc:id="3fe37240-4f6f-418e-8bd5-4cfe4845fe15" >
+		<http:listener doc:name="Listener" doc:id="010cdfb9-3c04-4f1d-aa07-993e12e344c3" config-ref="HTTP_Listener_config" path="/db"/>
+		<db:select doc:name="Select" doc:id="5516bb63-cf48-47d1-b826-87a76a9a4b22" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from company where age=:member]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	member:attributes.queryParams.name
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d0d1fdbf-c420-44c8-9621-4296e34c163b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5e05ca6c-5631-44e7-bbdf-9a7e865ae4fc" message='#["how are you#[payload.name]"]'/>
+	</flow>
+	<flow name="mulesoft-database-connectionFlow1" doc:id="ecfd1c14-1b76-44e5-9708-d5fe15fad293" >
+		<http:listener doc:name="Listener" doc:id="4f50865e-807b-4d57-89ec-32a72d3377b1" config-ref="HTTP_Listener_config" path="/db1"/>
+		<db:insert doc:name="Insert" doc:id="6de3a8cf-58d5-406c-a532-a89adb7ff458" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into company(name, age, occupation, salary) values(:name, :age, :occupation, :salary)
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name : payload.Name,
+	age : payload.Age,
+	occupation : payload.occu,
+	salary: payload.Salary
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="13806d38-6085-418b-a4f0-448047add0ed" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mulesoft-database-connectionFlow2" doc:id="d2e1adf0-0874-442d-af29-8b118d672d77" >
+		<http:listener doc:name="Listener" doc:id="a48fa1cc-8363-4961-b855-e3bc42eaa711" config-ref="HTTP_Listener_config" path="/db2"/>
+		<db:delete doc:name="Delete" doc:id="1afe1646-0e85-438b-be8f-f0d4b237a0f9" config-ref="Database_Config">
+			<db:sql ><![CDATA[delete from company where name = 'mona';]]></db:sql>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="6de9ac15-b865-41ee-8e5b-d372b8d1f15b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
